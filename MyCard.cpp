@@ -179,9 +179,9 @@ void convertValue(String inputS) {
     
 
     
-    Serial.print("log:float=");
+    /*Serial.print("log:float=");
     Serial.print(sizeof(amountBuf));
-    Serial.println(';');
+    Serial.println(';');*/
 }
 
 boolean readCommand() {
