@@ -100,9 +100,11 @@ int led1 = 6;
 int led2 = 5;
 String inputCommand = "";         // a string to hold incoming data
 String inputValue = "";
+String inputValue2 = "";
 String otpIn;
 boolean commandComplete = false;  // whether the string is complete
 boolean valueIn = false;
+boolean valueIn2 = false;
 boolean serialInt = false;
 char* otpReceived = "";
 char otp[10];
@@ -195,12 +197,19 @@ boolean readCommand() {
             if(!valueIn) {
                 inputCommand += inChar;
             } else {
-                inputValue += inChar;
+            	if(!valueIn2) {
+            		inputValue += inChar;
+            	} else {
+            		inputValue2 += inChar;
+            	}
             }
             // if the incoming character is a newline, set a flag
             // so the main loop can do something about it:
             if (inChar == ':') {
                 valueIn = true;
+            }
+            if (inChar == ',') {
+            	valueIn2 = true;
             }
             if (inChar == ';') {
                 commandComplete = true;
@@ -238,7 +247,9 @@ boolean readCommand() {
         }
         inputCommand = "";
         inputValue = "";
+        inputValue2 = "";
         valueIn = false;
+        valueIn2 = false;
         commandComplete = false;
         serialRead = true;
     }
@@ -410,25 +421,6 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
                         break;
                 }
                 break;
-            case UPDATE_BINARY:
-                if(!tagWriteable){
-                    setResponse(FUNCTION_NOT_SUPPORTED, rwbuf, &sendlen);
-                } else{
-                    if( p1p2_length > NDEF_MAX_LENGTH){
-                        setResponse(MEMORY_FAILURE, rwbuf, &sendlen);
-                    }
-                    else{
-                        memcpy(ndef_file + p1p2_length, rwbuf + C_APDU_DATA, lc);
-                        setResponse(COMMAND_COMPLETE, rwbuf, &sendlen);
-                        tagWrittenByInitiator = true;
-                        
-                        uint16_t ndef_length = (ndef_file[0] << 8) + ndef_file[1];
-                        if ((ndef_length > 0) && (updateNdefCallback != 0)) {
-                            updateNdefCallback(ndef_file + 2, ndef_length);
-                        }
-                    }
-                }
-                break;
             case AUTHENTICATE:
                 if((p1 == 0x00) && (p2 == 0x00)) {
                     //DMSG("\nAuthenticating... ");
@@ -507,16 +499,6 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
                             break;
                     }
                     delay(50);
-                    
-                }
-                break;
-            case UPDATE_CREDIT:
-                if((p1 == 0x00) && (p2 == 0x00)) {
-                    DMSG("\nVerifying: ");
-
-                    
-                    cardState = AUTHENTICATED;
-                    setResponse(COMMAND_COMPLETE, rwbuf, &sendlen);
                     
                 }
                 break;
