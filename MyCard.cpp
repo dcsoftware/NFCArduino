@@ -92,6 +92,7 @@ CardState cardState;
 String userId;
 String userCredit;
 char amountBuf[6];
+char timestampBuf[11];
 uint8_t secretK[] = "ABCDEFGHIJ"; //{0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a};
 int intCount = 0;
 long epoch = 0;
@@ -118,16 +119,16 @@ void verifyOtpCode(String input) {
     char nextCode[10];
     
     String a = input.substring(0, input.length() - 5);
-    char buff[20];
+    char buff[11];
     a.concat('0');
     a.toCharArray(buff, sizeof(buff));
     buff[sizeof(buff) - 1] = 0;
     epoch = atol(buff);
-    /*Serial.print("log: epoch = ");
-     Serial.print(epoch);
-     Serial.print(" - timestep: ");
-     Serial.print(timestep);
-     Serial.println(" ;");*/
+    //Serial.print("log: timestamp lenght = ");
+    //Serial.print(a.length());
+    //Serial.print(" - timestep: ");
+    //Serial.print(timestep);
+    //Serial.println(" ;");
     
     
     newCode = totp.getCode(epoch);
@@ -172,51 +173,43 @@ void verifyOtpCode(String input) {
     }
 }
 
-void convertValue(String inputS) {
-    String s = inputS.substring(0, inputS.length() - 1);
-    s.toCharArray(amountBuf, sizeof(amountBuf));
+void convertValue(String amount, String time) {
+	//String amount = inputS.substring(0, 5); //inputS.length() - 1);
+	//String time = inputS.substring(6);
+    //int z = inputS.indexOf('-');
+    amount.toCharArray(amountBuf, sizeof(amountBuf));
     amountBuf[sizeof(amountBuf) - 1] = 0;
-    float f = atof(amountBuf);
-    
-    
+    time.toCharArray(timestampBuf, sizeof(timestampBuf));
+    timestampBuf[sizeof(timestampBuf) - 1] = 0;
 
-    
-    /*Serial.print("log:float=");
-    Serial.print(sizeof(amountBuf));
-    Serial.println(';');*/
+    Serial.print("log:inputS=");
+    Serial.print(timestampBuf);
+    Serial.println(';');
 }
 
 boolean readCommand() {
     boolean serialRead = false;
     if(Serial.available() > 0) {
+
         while(Serial.available() > 0) {
             // get the new byte:
             char inChar = (char)Serial.read();
             // add it to the inputString:
-            
             if(!valueIn) {
                 inputCommand += inChar;
             } else {
-            	if(!valueIn2) {
-            		inputValue += inChar;
-            	} else {
-            		inputValue2 += inChar;
-            	}
+            	inputValue += inChar;
             }
             // if the incoming character is a newline, set a flag
             // so the main loop can do something about it:
             if (inChar == ':') {
                 valueIn = true;
             }
-            if (inChar == ',') {
-            	valueIn2 = true;
-            }
             if (inChar == ';') {
                 commandComplete = true;
                 break;
             }
         }
-        
     }
     if (commandComplete) {
         //Serial.println("log:" + inputCommand + "-" + inputValue);
@@ -232,13 +225,13 @@ boolean readCommand() {
         } else if (inputCommand.equals(SERIAL_COMMAND_PURCHASE)) {
             //digitalWrite(led1, HIGH);
             //Serial.println(inputCommand.concat(SERIAL_RESPONSE_OK));
-            convertValue(inputValue);
+        	convertValue(inputValue.substring(0, 5), inputValue.substring(6, 16));
             cardState = PURCHASE;
             
         } else if (inputCommand.equals(SERIAL_COMMAND_RECHARGE)) {
             //digitalWrite(led1, HIGH);
             //Serial.println(inputCommand.concat(SERIAL_RESPONSE_OK));
-            convertValue(inputValue);
+        	convertValue(inputValue.substring(0, 5), inputValue.substring(6, 16));
             cardState = RECHARGE;
         } else if (inputCommand.equals(SERIAL_COMMAND_GET_TIME) && (serialState == S_CONNECTED)) {
             
