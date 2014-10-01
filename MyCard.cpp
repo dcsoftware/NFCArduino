@@ -93,6 +93,7 @@ String userId;
 String userCredit;
 char amountBuf[6];
 char timestampBuf[11];
+char dataBuf[30];
 uint8_t secretK[] = "ABCDEFGHIJ"; //{0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a};
 int intCount = 0;
 long epoch = 0;
@@ -177,14 +178,23 @@ void convertValue(String amount, String time) {
 	//String amount = inputS.substring(0, 5); //inputS.length() - 1);
 	//String time = inputS.substring(6);
     //int z = inputS.indexOf('-');
-    amount.toCharArray(amountBuf, sizeof(amountBuf));
+
+
+    /*amount.toCharArray(amountBuf, sizeof(amountBuf));
     amountBuf[sizeof(amountBuf) - 1] = 0;
     time.toCharArray(timestampBuf, sizeof(timestampBuf));
     timestampBuf[sizeof(timestampBuf) - 1] = 0;
 
     Serial.print("log:inputS=");
     Serial.print(timestampBuf);
+    Serial.println(';');*/
+	amount.toCharArray(dataBuf, amount.length());
+	dataBuf[sizeof(dataBuf) - 1] = 0;
+
+    Serial.print("log:dataBuf=");
+    Serial.print(dataBuf);
     Serial.println(';');
+
 }
 
 boolean readCommand() {
@@ -225,13 +235,18 @@ boolean readCommand() {
         } else if (inputCommand.equals(SERIAL_COMMAND_PURCHASE)) {
             //digitalWrite(led1, HIGH);
             //Serial.println(inputCommand.concat(SERIAL_RESPONSE_OK));
-        	convertValue(inputValue.substring(0, 5), inputValue.substring(6, 16));
+        	//convertValue(inputValue.substring(0, 5), inputValue.substring(6, 16));
+        	convertValue(inputValue.substring(0,15), "ciao");
             cardState = PURCHASE;
             
         } else if (inputCommand.equals(SERIAL_COMMAND_RECHARGE)) {
             //digitalWrite(led1, HIGH);
             //Serial.println(inputCommand.concat(SERIAL_RESPONSE_OK));
-        	convertValue(inputValue.substring(0, 5), inputValue.substring(6, 16));
+        	//convertValue(inputValue.substring(0, 5), inputValue.substring(6, 16));
+        	Serial.print("log:dataBuf=");
+        	    Serial.print(inputValue.length());
+        	    Serial.println(';');
+        	convertValue(inputValue, "ciao");
             cardState = RECHARGE;
         } else if (inputCommand.equals(SERIAL_COMMAND_GET_TIME) && (serialState == S_CONNECTED)) {
             
@@ -552,18 +567,18 @@ void MyCard::setResponse(responseCommand cmd, uint8_t* buf, uint8_t* sendlen, ui
         case STATUS_RECHARGED:
             buf[0] = R_SW1_STATUS_RECHARGED;
             buf[1] = R_SW2_STATUS_RECHARGED;
-            for (int y = 0; y < sizeof(amountBuf); y++) {
-                buf[y + 2] = (uint8_t)amountBuf[y];
+            for (int y = 0; y < sizeof(dataBuf); y++) {
+                buf[y + 2] = (uint8_t)dataBuf[y];
             }
-            *sendlen= 2 + (sizeof(amountBuf) - 1);
+            *sendlen= 2 + (sizeof(dataBuf) - 1);
             break;
         case STATUS_PURCHASE:
             buf[0] = R_SW1_STATUS_PURCHASE;
             buf[1] = R_SW2_STATUS_PURCHASE;
-            for (int y = 0; y < sizeof(amountBuf); y++) {
-                buf[y + 2] = (uint8_t)amountBuf[y];
+            for (int y = 0; y < sizeof(dataBuf); y++) {
+                buf[y + 2] = (uint8_t)dataBuf[y];
             }
-            *sendlen= 2 + (sizeof(amountBuf) - 1);
+            *sendlen= 2 + (sizeof(dataBuf) - 1);
             break;
         case STATUS_DATA_UPDATED:
             buf[0] = R_SW1_STATUS_DATA_UPDATED;
