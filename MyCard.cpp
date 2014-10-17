@@ -56,6 +56,8 @@
 #define R_SW2_STATUS_PURCHASE 0x55
 #define R_SW1_STATUS_DATA_UPDATED 0x55
 #define R_SW2_STATUS_DATA_UPDATED 0x66
+#define R_SW1_PRIV_APP_SELECTED 0x66
+#define R_SW2_PRIV_APP_SELECTED 0x77
 
 // ISO7816-4 commands
 #define SELECT_FILE 0xA4
@@ -109,6 +111,7 @@ boolean valueIn2 = false;
 boolean serialInt = false;
 char* otpReceived = "";
 char otp[10];
+char cardId[8];
 
 TOTP totp = TOTP(secretK, 10);
 
@@ -255,6 +258,11 @@ bool MyCard::init(){
     return pn532.SAMConfig();
 }
 
+void MyCard::setId(char id[]) {
+	memcpy(id, cardId, 8);
+
+}
+
 void MyCard::setNdefFile(const uint8_t* ndef, const int16_t ndefLength){
     if(ndefLength >  (NDEF_MAX_LENGTH -2)){
         DMSG("ndef file too large (> NDEF_MAX_LENGHT -2) - aborting");
@@ -382,7 +390,7 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
                             while (!readCommand()) {
                                 delay(10);
                             }
-                            setResponse(COMMAND_COMPLETE, rwbuf, &sendlen);
+                            setResponse(PRIV_APPLICATION_SELECTED, rwbuf, &sendlen);
                             
                         } else {
                             DMSG("function not supported\n");
@@ -544,6 +552,14 @@ void MyCard::setResponse(responseCommand cmd, uint8_t* buf, uint8_t* sendlen, ui
             buf[1] = R_APDU_SW2_END_OF_FILE_BEFORE_REACHED_LE_BYTES;
             *sendlen= 2;
             break;
+        case PRIV_APPLICATION_SELECTED:
+            buf[0] = R_SW1_PRIV_APP_SELECTED;
+            buf[1] = R_SW2_PRIV_APP_SELECTED;
+            for (int y = 0; y < sizeof(cardId); y++) {
+                buf[y + 2] = (uint8_t)cardId[y];
+            }
+            *sendlen = 2 + sizeof(cardId);
+        	break;
         case STATUS_WAITING:
             buf[0] = R_SW1_STATUS_WAITING;
             buf[1] = R_SW2_STATUS_WAITING;

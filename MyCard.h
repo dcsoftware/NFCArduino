@@ -27,11 +27,8 @@ public:
     
     bool emulate(const uint16_t tgInitAsTargetTimeout = 0);
     
-    bool emulate2(const uint16_t tgInitAsTargetTimeout = 0);
-    
-    void updateInterruptCount(int count);
-    void updateTime(bool updated, long time);
-    
+    void setId(char id[]);
+
     /*
      * @param uid pointer to byte array of length 3 (uid is 4 bytes - first byte is fixed) or zero for uid
      */

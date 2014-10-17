@@ -43,7 +43,7 @@ uint8_t ndefBuf[120];
 NdefMessage message;
 int messageSize;
 int idAddress = 0;
-long id;
+char id[8] = "";
 
 uint8_t uid[3] = { 0x12, 0x34, 0x56 };
 volatile int n = 0;
@@ -79,13 +79,16 @@ ISR(INT0_vect) {
 // Add setup code
 void setup() {
     if(EEPROM.isReady()) {
-        id = EEPROM.readLong(idAddress);
+        //id = EEPROM.readLong(idAddress);
     }
+
     if(id == 0) {
         if(EEPROM.isReady()) {
-            EEPROM.writeLong(idAddress, 00000001);
+            EEPROM.writeBlock<char>(idAddress, "00000001", 8);
         }
     }
+
+    nfc.setId(id);
 
     /*pinMode(intPin, INPUT);
     digitalWrite(intPin, HIGH); //enabling pull up resistor
