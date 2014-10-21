@@ -10,7 +10,6 @@
 #include "MPN532_debug.h"
 #include "MNdefMessage.h"
 #include <string.h>
-#include <Serial.h>
 #include "sha1.h"
 #include "TOTP.h"
 #include <avr/wdt.h>
@@ -94,10 +93,11 @@ CardState cardState;
 String userId;
 String userCredit;
 char amountBuf[6];
-char timestampBuf[11];
+char timestampBuf[19];
 uint8_t secretK[] = "ABCDEFGHIJ"; //{0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a};
 int intCount = 0;
 long epoch = 0;
+long transactionId = 10000000;
 int led = 7;
 int led1 = 6;
 int led2 = 5;
@@ -111,7 +111,7 @@ boolean valueIn2 = false;
 boolean serialInt = false;
 char* otpReceived = "";
 char otp[10];
-char cardId[8];
+char cardId[] = "00005678";
 
 TOTP totp = TOTP(secretK, 10);
 
@@ -182,12 +182,13 @@ void convertValue(String amount, String time) {
     //int z = inputS.indexOf('-');
     amount.toCharArray(amountBuf, sizeof(amountBuf));
     amountBuf[sizeof(amountBuf) - 1] = 0;
+    time.concat(String(transactionId));
     time.toCharArray(timestampBuf, sizeof(timestampBuf));
     timestampBuf[sizeof(timestampBuf) - 1] = 0;
 
-    Serial.print("log:inputS=");
+    /*Serial.print("log:inputS=");
     Serial.print(timestampBuf);
-    Serial.println(';');
+    Serial.println(';');*/
 }
 
 boolean readCommand() {
@@ -228,12 +229,14 @@ boolean readCommand() {
         } else if (inputCommand.equals(SERIAL_COMMAND_PURCHASE)) {
             //digitalWrite(led1, HIGH);
             //Serial.println(inputCommand.concat(SERIAL_RESPONSE_OK));
+        	transactionId++;
         	convertValue(inputValue.substring(0, 5), inputValue.substring(6, 16));
             cardState = PURCHASE;
             
         } else if (inputCommand.equals(SERIAL_COMMAND_RECHARGE)) {
             //digitalWrite(led1, HIGH);
             //Serial.println(inputCommand.concat(SERIAL_RESPONSE_OK));
+        	transactionId++;
         	convertValue(inputValue.substring(0, 5), inputValue.substring(6, 16));
             cardState = RECHARGE;
         } else if (inputCommand.equals(SERIAL_COMMAND_GET_TIME) && (serialState == S_CONNECTED)) {
@@ -259,8 +262,7 @@ bool MyCard::init(){
 }
 
 void MyCard::setId(char id[]) {
-	memcpy(id, cardId, 8);
-
+	//memcpy(id, cardId, 8);
 }
 
 void MyCard::setNdefFile(const uint8_t* ndef, const int16_t ndefLength){
@@ -555,10 +557,10 @@ void MyCard::setResponse(responseCommand cmd, uint8_t* buf, uint8_t* sendlen, ui
         case PRIV_APPLICATION_SELECTED:
             buf[0] = R_SW1_PRIV_APP_SELECTED;
             buf[1] = R_SW2_PRIV_APP_SELECTED;
-            for (int y = 0; y < sizeof(cardId); y++) {
+            for (int y = 0; y < sizeof(cardId) - 1; y++) {
                 buf[y + 2] = (uint8_t)cardId[y];
             }
-            *sendlen = 2 + sizeof(cardId);
+            *sendlen = 2 + sizeof(cardId) - 1;
         	break;
         case STATUS_WAITING:
             buf[0] = R_SW1_STATUS_WAITING;

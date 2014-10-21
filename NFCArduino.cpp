@@ -79,16 +79,16 @@ ISR(INT0_vect) {
 // Add setup code
 void setup() {
     if(EEPROM.isReady()) {
-        //id = EEPROM.readLong(idAddress);
+        //EEPROM.readBlock<char>(idAddress, id, 8);
     }
 
     if(id == 0) {
         if(EEPROM.isReady()) {
-            EEPROM.writeBlock<char>(idAddress, "00000001", 8);
+            //EEPROM.writeBlock<char>(idAddress, "00000001", 8);
         }
     }
 
-    nfc.setId(id);
+    nfc.setId("00005678");
 
     /*pinMode(intPin, INPUT);
     digitalWrite(intPin, HIGH); //enabling pull up resistor
