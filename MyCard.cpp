@@ -281,13 +281,6 @@ void MyCard::setUid(uint8_t* uid){
 }
 
 bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
-    
-    pinMode(led, OUTPUT);
-    pinMode(led1, OUTPUT );
-    pinMode(led2, OUTPUT);
-    digitalWrite(led1, LOW);
-    digitalWrite(led, LOW);
-    digitalWrite(led2, LOW);
     userCredit = "0.0";
     userId = "";
     
@@ -321,6 +314,7 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
         DMSG("tgInitAsTarget failed or timed out!");
         return false;
     }
+    Serial.println("log:target inizializzato;");
     
     uint8_t base_capability_container[] = {
         0, 0x0F,    //CC length
@@ -509,19 +503,26 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
                 DMSG("Command not supported!");
                 DMSG_HEX(rwbuf[C_APDU_INS]);
                 DMSG("\n");
+                Serial.println("log:command not supported;");
                 setResponse(FUNCTION_NOT_SUPPORTED, rwbuf, &sendlen);
         }
         status = pn532.tgSetData(rwbuf, sendlen);
-        if(status < 0){
+        Serial.print("log:uscito da switch ");
+        Serial.print(status);
+        Serial.println(" ;");
+        if(status == 0){
             DMSG("tgSetData failed\n!");
             DMSG("\n In Release 1");
+            Serial.println("log:set data failed in release;");
             pn532.inRelease();
-            return true;
+            break;
         }
 
         
     }
+    Serial.println("log:uscito da while;");
     DMSG("\nIn Release 2");
+    Serial.println("log:in release;");
     pn532.inRelease();
     return true;
 }

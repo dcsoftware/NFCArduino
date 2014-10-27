@@ -100,7 +100,7 @@ void setup() {
         Serial.println("connection:req;");
     }*/
     message = NdefMessage();
-    message.addMimeMediaRecord("application/nfcvending", "ciao");
+    message.addMimeMediaRecord("application/coffeeapp", "ciao");
     messageSize = message.getEncodedSize();
     if (messageSize > sizeof(ndefBuf)) {
         //Serial.println("ndefBuf is too small");
@@ -147,7 +147,8 @@ void setup() {
 // Add loop code
 
 void loop() {
-
+	Serial.println("log:main loop;");
     nfc.emulate();
+    Serial.println("log:fine emulazione;");
 }
 
